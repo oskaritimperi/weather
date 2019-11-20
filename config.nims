@@ -1,6 +1,6 @@
 import strformat
 import strutils
-from os import `/`
+from os import `/`, parentDir
 
 task build, "build tools":
     mkdir("bin")
@@ -49,6 +49,8 @@ task createdb, "create a new database":
         &"RRA:MAX:0.5:{samplesInDay}:{daysIn10Years}",
         &"RRA:AVERAGE:0.5:{samplesInDay}:{daysIn10Years}",
     ]
+
+    mkdir(database.parentDir())
 
     echo("rrdtool " & args.join(" "))
     exec("rrdtool " & args.join(" "))
