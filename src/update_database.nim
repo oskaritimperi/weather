@@ -49,7 +49,7 @@ proc readData(): string =
     if size == 0:
         return ""
     result = newString(size)
-    if readBuffer(stdin, addr result[0], size) != 0:
+    if readBuffer(stdin, addr result[0], size) != size:
         raise newCgiError(400, "not enough data")
 
 proc main() =
