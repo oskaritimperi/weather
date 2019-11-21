@@ -19,15 +19,13 @@
 ## The program should be run with an accompanying CGI script as the main driver. The web server will
 ## execute the script which looks like this:
 ##
-##    #!/path/to/update_database
-##    databaseDir = /path/to/where/databases/are
-##
-## This will execute update_database with one argument: the path to this script file.
-## update_database will read this script and parse it as a configuration file. The databaseDir
-## option should point to where the .rrd databases are stored.
+##    #!/bin/sh
+##    /path/to/update_database
 ##
 ## The update_database program will use the ``alias`` from measurements as the database name (with
 ## ``.rrd`` extension).
+##
+## Databases are found relative to this executable, from ``../database``.
 
 import json
 import os
