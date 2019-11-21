@@ -53,13 +53,7 @@ proc readData(): string =
         raise newCgiError(400, "not enough data")
 
 proc main() =
-    if paramCount() != 2:
-        raise newCgiError(500, "one argument required")
-
-    let config = loadConfig(paramStr(1))
-    let databaseDir = config.getSectionValue("", "databaseDir")
-    if databaseDir == "":
-        raise newCgiError(500, "databaseDir is empty")
+    let databaseDir = getAppDir().parentDir() / "database"
 
     if getEnv("REQUEST_METHOD") != "POST":
         raise newCgiError(400, "request method must be POST")
@@ -71,6 +65,10 @@ proc main() =
 
         if not filename.startsWith(databaseDir):
             raise newCgiError(400, "invalid database")
+
+        if not fileExists(filename):
+            raise newCgiError(400, "unknown database")
+
         let
             timestamp = measurement["timestamp"].getBiggestInt()
             temperature = measurement["temperature"].getFloat()
@@ -79,6 +77,7 @@ proc main() =
             battery = measurement["battery_potential"].getFloat()
             data = &"{timestamp}:{temperature}:{humidity}:{pressure}:{battery}"
             (_, ec) = execCmdEx(&"rrdtool update {filename} {data}")
+
         if ec != 0:
             raise newCgiError(500, "rrdtool failed")
 
