@@ -1,3 +1,34 @@
+## RRD database update CGI program. Takes JSON measurements from ruuvitag-upload
+## (https://github.com/oswjk/ruuvitag-upload) as input and stores them in the correct RRD database.
+##
+## The JSON format is as follows:
+##
+##    {
+##        "alias": {
+##            "timestamp": <seconds since unix epoch>,
+##            "temperature": <temperature in degrees celcius>,
+##            "humidity": <relative humidity (0% - 100%)>,
+##            "pressure": <pressure in kilopascals>,
+##            "battery_potential": <ruuvitag battery potential in volts>
+##        },
+##        "another_alias": {
+##            ...
+##        }
+##    }
+##
+## The program should be run with an accompanying CGI script as the main driver. The web server will
+## execute the script which looks like this:
+##
+##    #!/path/to/update_database
+##    databaseDir = /path/to/where/databases/are
+##
+## This will execute update_database with one argument: the path to this script file.
+## update_database will read this script and parse it as a configuration file. The databaseDir
+## option should point to where the .rrd databases are stored.
+##
+## The update_database program will use the ``alias`` from measurements as the database name (with
+## ``.rrd`` extension).
+
 import json
 import os
 import osproc

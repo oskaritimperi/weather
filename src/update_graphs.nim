@@ -1,3 +1,20 @@
+## RRD database graphing tool. Reads all databases from a directory and generates graphs from each
+## of them.
+##
+## The generated graphs include
+##
+## - Temperature for today and yesterday
+## - Temperature for current month and previous month
+## - Relative humidity for today and yesterday
+## - Relative humidity for current month and previous month
+## - Pressure for today and yesterday
+## - Pressure for current month and previous month
+##
+## The database directory is constructed from the path to this executable, by using the relative
+## path ``../database``.
+##
+## The graphs are output to directory specified on the command line.
+
 import os
 import osproc
 import strformat
