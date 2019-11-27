@@ -18,12 +18,44 @@
 import os
 import osproc
 import strformat
+import times
+
+proc getLastDayOfCurrentMonth(): string =
+    let now = times.now()
+    let days = getDaysInMonth(now.month, now.year)
+    result = &"{now.year}{ord(now.month):02}{days:02}"
+
+proc getFirstDayOfCurrentMonth(): string =
+    let now = times.now()
+    result = &"{now.year}{ord(now.month):02}01"
+
+proc getFirstDayOfPreviousMonth(): string =
+    let now = times.now()
+    let beginningOfMonth = initDateTime(1, now.month, now.year, 0, 0, 0)
+    let endOfPrevMonth = beginningOfMonth - 1.days
+    result = &"{endOfPrevMonth.year}{ord(endOfPrevMonth.month):02}01"
+
+proc secondsInPrevMonth(): int =
+    let beginningOfMonth = initDateTime(1, times.now().month, times.now().year, 0, 0, 0)
+    let endOfPrevMonth = beginningOfMonth - 1.days
+    let days = getDaysInMonth(endOfPrevMonth.month, endOfPrevMonth.year)
+    result = days * 24 * 60 * 60
+
+proc getDaysForMonthGraph(): int =
+    let now = times.now()
+    let beginningOfMonth = initDateTime(1, now.month, now.year, 0, 0, 0)
+    let endOfPrevMonth = beginningOfMonth - 1.days
+    result = max(getDaysInMonth(beginningOfMonth.month, beginningOfMonth.year),
+        getDaysInMonth(endOfPrevMonth.month, endOfPrevMonth.year))
 
 let
     databaseDir = getAppDir().parentDir() / "database"
-    outputDir = paramStr(2)
+    outputDir = paramStr(1)
     width = 800
     height = 600
+    lastDayOfCurrentMonth = getLastDayOfCurrentMonth()
+    firstDayOfCurrentMonth = getFirstDayOfCurrentMonth()
+    firstDayOfPreviousMonth = getFirstDayOfPreviousMonth()
 
 proc graph(filename, title, vlabel: string, args: varargs[string, `$`]) =
     var cmdline: seq[string] = @[
@@ -40,6 +72,7 @@ proc graph(filename, title, vlabel: string, args: varargs[string, `$`]) =
         options={poStdErrToStdOut, poUsePath, poParentStreams})
 
     if p.waitForExit() != 0:
+        echo("failed")
         quit(1)
 
 
@@ -59,17 +92,16 @@ for database in walkFiles(joinPath(databaseDir, "*.rrd")):
     )
 
     graph(&"{base}-temperature-month.png", "Temperature", "Celcius",
-        "--end", "23:59 today",
-        "--start", "end-1month",
-        "--step", "86400",
+        "--start", &"00:00 {firstDayOfCurrentMonth}",
+        "--end", &"start+{getDaysForMonthGraph()}days",
+        "--step", "3600",
         "--alt-autoscale",
         "--x-grid", "DAY:1:DAY:1:DAY:1:86400:%d",
-        &"DEF:avg={database}:temperature:AVERAGE",
-        &"DEF:min={database}:temperature:MIN",
-        &"DEF:max={database}:temperature:MAX",
-        "LINE1:avg#000000:average",
-        "LINE2:min#FF0000:min",
-        "LINE3:max#00FF00:max"
+        &"DEF:curr={database}:temperature:AVERAGE",
+        &"DEF:prev={database}:temperature:AVERAGE:end=00\\:00 {firstDayOfCurrentMonth}:start=00\\:00 {firstDayOfPreviousMonth}",
+        "LINE1:curr#000000:current month",
+        "LINE1:prev#FF0000:previous month",
+        &"SHIFT:prev:{secondsInPrevMonth()}",
     )
 
     graph(&"{base}-humidity-today.png", "Relative humidity", "%",
@@ -83,17 +115,16 @@ for database in walkFiles(joinPath(databaseDir, "*.rrd")):
     )
 
     graph(&"{base}-humidity-month.png", "Relative humidity", "%",
-        "--end", "23:59 today",
-        "--start", "end-1month",
-        "--step", "86400",
+        "--start", &"00:00 {firstDayOfCurrentMonth}",
+        "--end", &"start+{getDaysForMonthGraph()}days",
+        "--step", "3600",
         "--alt-autoscale",
         "--x-grid", "DAY:1:DAY:1:DAY:1:86400:%d",
-        &"DEF:avg={database}:humidity:AVERAGE",
-        &"DEF:min={database}:humidity:MIN",
-        &"DEF:max={database}:humidity:MAX",
-        "LINE1:avg#000000:average",
-        "LINE2:min#FF0000:min",
-        "LINE3:max#00FF00:max",
+        &"DEF:curr={database}:humidity:AVERAGE",
+        &"DEF:prev={database}:humidity:AVERAGE:end=00\\:00 {firstDayOfCurrentMonth}:start=00\\:00 {firstDayOfPreviousMonth}",
+        "LINE1:curr#000000:current month",
+        "LINE1:prev#FF0000:previous month",
+        &"SHIFT:prev:{secondsInPrevMonth()}",
     )
 
     graph(&"{base}-pressure-today.png", "Pressure", "Pascal",
@@ -109,16 +140,15 @@ for database in walkFiles(joinPath(databaseDir, "*.rrd")):
     )
 
     graph(&"{base}-pressure-month.png", "Pressure", "Pascal",
-        "--end", "23:59 today",
-        "--start", "end-1month",
-        "--step", "86400",
+        "--start", &"00:00 {firstDayOfCurrentMonth}",
+        "--end", &"start+{getDaysForMonthGraph()}days",
+        "--step", "3600",
         "--alt-autoscale",
-        "--x-grid", "DAY:1:DAY:1:DAY:1:86400:%d",
         "--left-axis-format", "%.1lf",
-        &"DEF:avg={database}:pressure:AVERAGE",
-        &"DEF:min={database}:pressure:MIN",
-        &"DEF:max={database}:pressure:MAX",
-        "LINE1:avg#000000:average",
-        "LINE2:min#FF0000:min",
-        "LINE3:max#00FF00:max",
+        "--x-grid", "DAY:1:DAY:1:DAY:1:86400:%d",
+        &"DEF:curr={database}:pressure:AVERAGE",
+        &"DEF:prev={database}:pressure:AVERAGE:end=00\\:00 {firstDayOfCurrentMonth}:start=00\\:00 {firstDayOfPreviousMonth}",
+        "LINE1:curr#000000:current month",
+        "LINE1:prev#FF0000:previous month",
+        &"SHIFT:prev:{secondsInPrevMonth()}",
     )
