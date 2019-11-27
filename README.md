@@ -4,12 +4,14 @@
 
 - Execute `nim build` to build binaries for updating database and graphs
 
-- Create your databases with `nim createdb database/$DATABASE.rrd`
+- Create your databases with `./bin/create_database DATABASE-NAME`
 
-- Install the CGI script with `nim install_cgi_kapsi $CGI_SCRIPT_PATH`
+    - For example `./bin/create_database porch`
+
+- Install the CGI script with `./bin/install_cgi_kapsi SCRIPT_PATH`
 
     - For example `nim install_cgi_kapsi $HOME/sites/example.com/www/weather/update.cgi`
 
-- Install a cron job for updating graphs
+- Install a cron job for updating graphs `./bin/update_graphs GRAPH_OUTPUT_DIR`
 
     - For example `$HOME/sites/example.com/weather/bin/update_graphs $HOME/sites/example.com/www/weather`
